@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "target": "ES2022",
+        "module": "ES2022"
+    },
+    "include": [
+        "src/**.ts"
+    ],
+    "exclude": [
+        "dist/",
+        "node_modules/"
+    ]
+}
