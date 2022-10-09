@@ -1,11 +1,86 @@
 import * as Three from 'three';
+import { Mesh } from 'three';
+
+class Planet {
+    baseColor: Three.Color;
+    hasRings: boolean;
+    bodyRadius: number;
+    orbitRadius: number;
+    orbitOffset: number;
+
+    public constructor(
+        color: Three.Color,
+        rings: boolean,
+        radius: number,
+        orbit: number, offset: number)
+    {
+        this.baseColor = color;
+        this.hasRings = rings;
+        this.bodyRadius = radius;
+        this.orbitRadius = orbit;
+        this.orbitOffset = offset;
+    }
+
+    public addToViewport = (viewport: Viewport) => {
+        const pos = this.calcPositionVector();
+
+        const body = this.makeBody();
+        body.position.set(pos.x, pos.y, pos.z);
+        viewport.scene.add(body);
+
+        if (this.hasRings) {
+            const rings = this.makeRings();
+            rings.position.set(pos.x, pos.y, pos.z);
+            viewport.scene.add(rings);
+        }
+    }
+
+    private makeBody = () : Three.Mesh => {
+        const geometry = new Three.SphereGeometry(this.bodyRadius, 64, 64);
+        const material = new Three.MeshPhongMaterial({
+            emissive: this.baseColor,
+            emissiveIntensity: 0.6
+        });
+        const mesh = new Three.Mesh(geometry, material);
+
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        
+        return mesh;
+    }
+
+    private makeRings = () : Three.Mesh => {
+        const innerRadius = this.bodyRadius * 1.1;
+        const outerRadius = this.bodyRadius * 1.5;
+        const emissiveColor = this.baseColor;
+
+        const geometry = new Three.RingGeometry(innerRadius, outerRadius, 30, 1);
+        const material = new Three.MeshPhongMaterial({
+            emissive: emissiveColor,
+            emissiveIntensity: 0.3
+        });
+        const mesh = new Three.Mesh(geometry, material);
+
+        mesh.rotateX(1);
+
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        
+        return mesh;
+        
+    }
+
+    private calcPositionVector = () : Three.Vector3 => {
+        return new Three.Vector3(this.orbitRadius, 0.0, 0.0);
+    }
+}
 
 class Viewport {
     camera: Three.PerspectiveCamera;
     scene: Three.Scene;
     renderer: Three.WebGLRenderer;
 
-    fov: number = 80;
+    fov: number = 75;
 
     public constructor() {
         this.onInit = this.onInit.bind(this);
@@ -53,56 +128,36 @@ class Viewport {
     /// ==============================
 
     setupCamera = () => {
-        this.camera.rotation.x -= 0.4;
-        this.camera.position.y += 0.4;
+        this.camera.position.z += 1;
 
-        this.camera.position.x -= 0.4;
-        this.camera.rotation.y -= 0.4;
+        // this.camera.rotation.x -= 0.4;
+        // this.camera.position.y += 0.4;
+
+        // this.camera.position.x -= 0.2;
+        // this.camera.rotation.y -= 0.2;
     }
 
     setupLighting = () => {
-        const ambient = new Three.AmbientLight(0x0000FF, 0.05);
+        const ambient = new Three.AmbientLight(0xffffff, 0.01);
         this.scene.add(ambient);
 
-        const left = new Three.PointLight(0x0000ff, 0.9, 10);
-        left.position.set(-0.25, -0.25, 0.25);
-        this.scene.add(left);
-        
-        const right = new Three.PointLight(0xff0000, 0.8, 10);
-        right.position.set(0.25, 0.25, 0.25);
-        this.scene.add(right);
-        
-        const front = new Three.PointLight(0xffffff, 0.1, 10);
-        front.position.set(0.25, -0.25, 1.0);
-        this.scene.add(front);
+        const central = new Three.PointLight(0xffffff, 0.5, 100);
+        central.position.set(0, 0, 0);
+        this.scene.add(central);
     }
 
     setupGeometry = () => {
+        const firstPlanet = new Planet(
+            new Three.Color(0x800505), true, 0.1, 0.55, 0.0);
+        firstPlanet.addToViewport(this);
 
-        // a central sphere:
-        {
-            const geometry = new Three.SphereGeometry(0.1, 128, 128);
-            const material = new Three.MeshPhongMaterial({});
-            const mesh = new Three.Mesh(geometry, material);
+        const secondPlanet = new Planet(
+            new Three.Color(0x00027c), false, 0.075, 1.1, 0.0);
+        secondPlanet.addToViewport(this);
 
-            mesh.position.set(0.0, 0.0, 0.3);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            
-            this.scene.add(mesh);
-        }
-
-        // a simple cube:
-        {
-            const geometry = new Three.BoxGeometry(0.3, 0.3, 0.3);
-            const material = new Three.MeshPhongMaterial({});
-            const mesh = new Three.Mesh(geometry, material);
-
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-    
-            this.scene.add(mesh);
-        }
+        const thirdPlanet = new Planet(
+            new Three.Color(0x037801), false, 0.15, 2.0, 0.0);
+        thirdPlanet.addToViewport(this);
     }
 }
 
