@@ -4,7 +4,11 @@
   "description": "A 3D star system in the browser.",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo No tests yet."
+    "build": "webpack --mode production",
+    "build-dev": "webpack --mode development",
+    "serve": "webpack serve --mode production",
+    "serve-dev": "webpack serve --mode development",
+    "watch": "webpack --watch"
   },
   "author": "Alex Sobolev",
   "license": "Unlicense",
